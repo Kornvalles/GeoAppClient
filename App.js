@@ -6,11 +6,15 @@ import {
   StyleSheet,
   TouchableHighlight,
   Alert,
+  SafeAreaView,
+  Button,
+  Modal
 } from "react-native";
 import * as Location from "expo-location";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import Constants from "expo-constants";
 import facade from "./serverFacade";
+import Login from "./components/login";
 
 const MyButton = ({ txt, onPressButton }) => {
   return (
@@ -28,6 +32,8 @@ export default App = () => {
   const [region, setRegion] = useState(null);
   const [serverIsUp, setServerIsUp] = useState(false);
   const [status, setStatus] = useState("");
+  const [nearByPlayers, setNearByPlayers] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
   let mapRef = useRef(null);
 
   useEffect(() => {
@@ -37,6 +43,15 @@ export default App = () => {
   useEffect(() => {
     getGameArea();
   }, []);
+
+  getNearByPlayers = async (userName, password, lat, lon, distance) => {
+    try {
+      const players = await facade.fetchNearByPlayers();
+      setNearByPlayers(players)
+    } catch (err) {
+      setErrorMessage("Could not fetch NearByPlayers");
+    }
+  }
 
   async function getGameArea() {
     //Fetch gameArea via the facade, and call this method from within (top) useEffect
@@ -120,8 +135,14 @@ export default App = () => {
 
   const info = serverIsUp ? status : " Server is not up";
   return (
-    <View style={{ flex: 1, paddingTop: 25 }}>
+    <SafeAreaView style={styles.container}>
       {!region && <Text style={styles.fetching}>.. Fetching data</Text>}
+      <Button
+        title="Find Near By Players"
+        onPress={() => setModalVisible(!modalVisible)}
+      />
+      <Login visible={modalVisible} setVisible={setModalVisible} />
+
 
       {/* Add MapView */}
       {region && (
@@ -138,7 +159,8 @@ export default App = () => {
               coordinates={gameArea}
               strokeWidth={1}
               onPress={onMapPress}
-              fillColor="transparent"
+              fillColor="rgba(255,255,255,0.4)"
+              tappable={true}
             />
           )}
 
@@ -151,6 +173,11 @@ export default App = () => {
               latitude: Number(position.latitude),
             }}
           />
+          {/* {nearByPlayers.map(p => {
+            <MapView.Marker
+              title={p.}
+            />
+          })} */}
         </MapView>
       )}
 
@@ -170,17 +197,13 @@ export default App = () => {
         onPressButton={() => onCenterGameArea()}
         txt="Show Game Area"
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: Constants.statusBarHeight,
-    backgroundColor: "#ecf0f1",
+    flex: 1
   },
   touchable: { backgroundColor: "#4682B4", margin: 3 },
   touchableTxt: { fontSize: 22, textAlign: "center", padding: 5 },
