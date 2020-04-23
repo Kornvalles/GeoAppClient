@@ -7,22 +7,15 @@ import {
   TouchableHighlight,
   Alert,
   SafeAreaView,
-  Button,
-  Modal
+  Modal,
+  StatusBar,
 } from "react-native";
 import * as Location from "expo-location";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import Constants from "expo-constants";
 import facade from "./serverFacade";
 import Login from "./components/login";
-
-const MyButton = ({ txt, onPressButton }) => {
-  return (
-    <TouchableHighlight style={styles.touchable} onPress={onPressButton}>
-      <Text style={styles.touchableTxt}>{txt}</Text>
-    </TouchableHighlight>
-  );
-};
+import { Icon, Header, Button } from "react-native-elements";
 
 export default App = () => {
   //HOOKS
@@ -47,11 +40,11 @@ export default App = () => {
   getNearByPlayers = async (userName, password, lat, lon, distance) => {
     try {
       const players = await facade.fetchNearByPlayers();
-      setNearByPlayers(players)
+      setNearByPlayers(players);
     } catch (err) {
       setErrorMessage("Could not fetch NearByPlayers");
     }
-  }
+  };
 
   async function getGameArea() {
     //Fetch gameArea via the facade, and call this method from within (top) useEffect
@@ -135,20 +128,30 @@ export default App = () => {
 
   const info = serverIsUp ? status : " Server is not up";
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
       {!region && <Text style={styles.fetching}>.. Fetching data</Text>}
-      <Button
-        title="Find Near By Players"
-        onPress={() => setModalVisible(!modalVisible)}
+      <Header
+        placement="left"
+        leftComponent={{ icon: "menu", color: "#fff" }}
+        centerComponent={{ text: "GEO APP", style: { color: "#fff" } }}
+        rightComponent={
+          <Icon
+            name="ios-log-in"
+            onPress={() => setModalVisible(!modalVisible)}
+            type="ionicon"
+            color="#fff"
+          />
+        }
       />
-      <Login visible={modalVisible} setVisible={setModalVisible} />
 
+      <Login visible={modalVisible} setVisible={setModalVisible} />
 
       {/* Add MapView */}
       {region && (
         <MapView
           ref={mapRef}
-          style={{ flex: 14 }}
+          style={{ flex: 1 }}
           onPress={onMapPress}
           mapType="standard"
           region={region}
@@ -178,35 +181,39 @@ export default App = () => {
               title={p.}
             />
           })} */}
+          <View>
+            <Text>
+              Your position (lat,long): {position.latitude},{" "}
+              {position.longitude}
+            </Text>
+            <Text>{info}</Text>
+            <Button
+              style={{ padding: 10 }}
+              onPress={sendRealPosToServer}
+              title="Upload real Position"
+            />
+            <Button
+              style={{ padding: 10 }}
+              onPress={() => onCenterGameArea()}
+              title="Show Game Area"
+            />
+          </View>
         </MapView>
       )}
-
-      <Text style={{ flex: 1, textAlign: "center", fontWeight: "bold" }}>
-        Your position (lat,long): {position.latitude}, {position.longitude}
-      </Text>
-      <Text style={{ flex: 1, textAlign: "center" }}>{info}</Text>
-
-      <MyButton
-        style={{ flex: 2 }}
-        onPressButton={sendRealPosToServer}
-        txt="Upload real Position"
-      />
-
-      <MyButton
-        style={{ flex: 2 }}
-        onPressButton={() => onCenterGameArea()}
-        txt="Show Game Area"
-      />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1
+    flex: 1,
   },
   touchable: { backgroundColor: "#4682B4", margin: 3 },
   touchableTxt: { fontSize: 22, textAlign: "center", padding: 5 },
+  positionInfo: {
+    flex: 1,
+    backgroundColor: "white",
+  },
 
   fetching: {
     fontSize: 35,

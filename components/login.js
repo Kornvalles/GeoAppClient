@@ -44,10 +44,10 @@ export default Login = props => {
                     onChangeText={text => setPassword(text)}
                     value={password}
                 />
-                <MyButton
+                {/* <MyButton
                     txt="Login"
                     onPressButton={()}
-                />
+                /> */}
                 <MyButton
                     txt="Back"
                     onPressButton={() => props.setVisible(!props.visible)}
