@@ -1,17 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Platform,
   Text,
   View,
   StyleSheet,
-  TouchableHighlight,
   Alert,
-  SafeAreaView,
-  Modal,
   StatusBar,
 } from "react-native";
 import * as Location from "expo-location";
-import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import MapView from "react-native-maps";
 import Constants from "expo-constants";
 import facade from "./serverFacade";
 import Login from "./components/login";
