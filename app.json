@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "client-location-noDB",
-    "slug": "client-location-noDB",
+    "name": "Geo-App",
+    "slug": "geo-app",
     "platforms": [
       "ios",
       "android",
@@ -23,6 +23,8 @@
     ],
     "ios": {
       "supportsTablet": true
-    }
+    },
+    "description": "School project GeoJson App",
+    "githubUrl": "https://github.com/Kornvalles/GeoAppClient"
   }
 }
