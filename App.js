@@ -31,10 +31,6 @@ export default App = () => {
     // console.log(nearByPlayers)
   }, []);
 
-  // useEffect(() => {
-  //   setShowNearByPlayer(true);
-  // }, nearByPlayers)
-
   getLocationAsync = async () => {
     //Request permission for users location, get the location and call this method from useEffect
     let { status } = await Location.requestPermissionsAsync();
