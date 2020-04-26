@@ -1,72 +1,61 @@
 import React, { useState } from "react";
-import {
-    Text,
-    StyleSheet,
-    TouchableHighlight,
-    SafeAreaView,
-    Modal,
-    TextInput,
-    View
-} from "react-native";
+import { StyleSheet, Modal, TextInput, View } from "react-native";
+import { Button } from "react-native-elements";
 
-const MyButton = ({ txt, onPressButton }) => {
-    return (
-        <TouchableHighlight style={styles.touchable} onPress={onPressButton}>
-            <Text style={styles.touchableTxt}>{txt}</Text>
-        </TouchableHighlight>
-    );
-};
+export default Login = (props) => {
 
-export default Login = props => {
-    //HOOKS
-    const [username, setUsername] = useState("Input username");
-    const [password, setPassword] = useState("Input password");
+  //HOOKS
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
 
-    return (
-
-        <Modal
-            presentationStyle="overFullScreen"
-            animationType="slide"
-            visible={props.visible}
-        >
-            <SafeAreaView style={styles.container}>
-
-                <TextInput
-                    textContentType="username"
-                    style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-                    onChangeText={text => setUsername(text)}
-                    value={username}
-                />
-                <TextInput
-                    secureTextEntry={true}
-                    textContentType="password"
-                    style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-                    onChangeText={text => setPassword(text)}
-                    value={password}
-                />
-                {/* <MyButton
-                    txt="Login"
-                    onPressButton={()}
-                /> */}
-                <MyButton
-                    txt="Back"
-                    onPressButton={() => props.setVisible(!props.visible)}
-                />
-
-
-            </SafeAreaView>
-
-
-        </Modal >
-
-
-    );
+  return (
+    <Modal
+      presentationStyle="fullScreen"
+      animationType="slide"
+      visible={props.visible}
+    >
+      <View style={styles.container}>
+        <TextInput
+          keyboardType="ascii-capable"
+          placeholder="Input username"
+          textContentType="username"
+          autoFocus={true}
+          style={styles.input}
+          onChangeText={(text) => setCredentials({...credentials, username: text})}
+          value={credentials.username}
+        />
+        <TextInput
+          keyboardType="ascii-capable"
+          placeholder="Input password"
+          secureTextEntry={true}
+          textContentType="password"
+          style={styles.input}
+          onChangeText={(text) => setCredentials({...credentials, password: text})}
+          value={credentials.password}
+        />
+        <Button
+          title="Login"
+          onPress={props.login.bind(this, credentials)}
+        />
+      </View>
+    </Modal>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1
-    },
-    touchable: { backgroundColor: "#4682B4", margin: 3 },
-    touchableTxt: { fontSize: 22, textAlign: "center", padding: 5 }
+  container: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    marginTop: 50
+  },
+  input: {
+    width: "80%",
+    borderColor: "black",
+    borderWidth: 1,
+    padding: 10,
+    marginBottom: 10,
+  },
 });

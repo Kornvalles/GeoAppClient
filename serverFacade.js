@@ -7,8 +7,8 @@ ServerFacade = () => {
     const newPosition = {
       userName,
       password,
-      lat,
       lon,
+      lat,
       distance
     };
     const config = {

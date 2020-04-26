@@ -5,53 +5,35 @@ import {
   StyleSheet,
   Alert,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import * as Location from "expo-location";
 import MapView from "react-native-maps";
 import Constants from "expo-constants";
 import facade from "./serverFacade";
-import Login from "./components/login";
+import Login from "./components/Login";
 import { Icon, Header, Button } from "react-native-elements";
 
 export default App = () => {
   //HOOKS
   const [position, setPosition] = useState({ latitude: null, longitude: null });
   const [errorMessage, setErrorMessage] = useState(null);
-  const [gameArea, setGameArea] = useState([]);
   const [region, setRegion] = useState(null);
   const [serverIsUp, setServerIsUp] = useState(false);
   const [status, setStatus] = useState("");
-  const [nearByPlayers, setNearByPlayers] = useState([]);
+  const [nearByPlayers, setNearByPlayers] = useState();
   const [modalVisible, setModalVisible] = useState(false);
+  const [showNearByPlayer, setShowNearByPlayer] = useState(false);
   let mapRef = useRef(null);
 
   useEffect(() => {
     getLocationAsync();
+    // console.log(nearByPlayers)
   }, []);
 
-  useEffect(() => {
-    getGameArea();
-  }, []);
-
-  getNearByPlayers = async (userName, password, lat, lon, distance) => {
-    try {
-      const players = await facade.fetchNearByPlayers();
-      setNearByPlayers(players);
-    } catch (err) {
-      setErrorMessage("Could not fetch NearByPlayers");
-    }
-  };
-
-  async function getGameArea() {
-    //Fetch gameArea via the facade, and call this method from within (top) useEffect
-    try {
-      const area = await facade.fetchGameArea();
-      setGameArea(area);
-      setServerIsUp(true);
-    } catch (err) {
-      setErrorMessage("Could not fetch GameArea");
-    }
-  }
+  // useEffect(() => {
+  //   setShowNearByPlayer(true);
+  // }, nearByPlayers)
 
   getLocationAsync = async () => {
     //Request permission for users location, get the location and call this method from useEffect
@@ -81,16 +63,6 @@ export default App = () => {
   */
   onMapPress = async (event) => {
     //Get location from where user pressed on map, and check it against the server
-    const coordinate = event.nativeEvent.coordinate;
-    const lon = coordinate.longitude;
-    const lat = coordinate.latitude;
-    try {
-      const status = await facade.isUserInArea(lon, lat);
-      showStatusFromServer(setStatus, status);
-    } catch (err) {
-      Alert.alert("Error", "Server could not be reached");
-      setServerIsUp(false);
-    }
   };
 
   onCenterGameArea = () => {
@@ -122,80 +94,120 @@ export default App = () => {
     }
   };
 
+  const loginHandler = async (credentials) => {
+    setModalVisible(false);
+    try {
+      const players = await facade.fetchNearByPlayers(
+        credentials.username,
+        credentials.password,
+        Number(position.latitude),
+        Number(position.longitude),
+        100,
+      );
+      setNearByPlayers(players);
+      setShowNearByPlayer(true);
+    } catch (err) {
+      setErrorMessage("Wrong credentials");
+    }
+  };
+
   const info = serverIsUp ? status : " Server is not up";
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      {!region && <Text style={styles.fetching}>.. Fetching data</Text>}
       <Header
         placement="left"
         leftComponent={{ icon: "menu", color: "#fff" }}
-        centerComponent={{ text: "GEO APP", style: { color: "#fff" } }}
+        centerComponent={{
+          text: "GEO GO!",
+          style: {
+            color: "#fff",
+            fontSize: 18,
+            fontFamily: "Helvetica Neue",
+            fontWeight: "bold",
+          },
+        }}
         rightComponent={
           <Icon
             name="ios-log-in"
-            onPress={() => setModalVisible(!modalVisible)}
+            onPress={() => setModalVisible(true)}
             type="ionicon"
             color="#fff"
+            size={35}
           />
         }
       />
-
-      <Login visible={modalVisible} setVisible={setModalVisible} />
-
-      {/* Add MapView */}
-      {region && (
-        <MapView
-          ref={mapRef}
-          style={{ flex: 1 }}
-          onPress={onMapPress}
-          mapType="standard"
-          region={region}
-        >
-          {/*App MapView.Polygon to show gameArea*/}
-          {serverIsUp && (
-            <MapView.Polygon
-              coordinates={gameArea}
-              strokeWidth={1}
-              onPress={onMapPress}
-              fillColor="rgba(255,255,255,0.4)"
-              tappable={true}
-            />
-          )}
-
-          {/*App MapView.Marker to show users current position*/}
-          <MapView.Marker
-            title="me"
-            pinColor="blue"
-            coordinate={{
-              longitude: Number(position.longitude),
-              latitude: Number(position.latitude),
-            }}
-          />
-          {/* {nearByPlayers.map(p => {
-            <MapView.Marker
-              title={p.}
-            />
-          })} */}
-          <View>
-            <Text>
-              Your position (lat,long): {position.latitude},{" "}
-              {position.longitude}
-            </Text>
-            <Text>{info}</Text>
-            <Button
-              style={{ padding: 10 }}
-              onPress={sendRealPosToServer}
-              title="Upload real Position"
-            />
-            <Button
-              style={{ padding: 10 }}
-              onPress={() => onCenterGameArea()}
-              title="Show Game Area"
-            />
-          </View>
-        </MapView>
+      {errorMessage && (
+        alert(errorMessage),
+        setErrorMessage(null)
       )}
+      <Login
+        login={loginHandler}
+        visible={modalVisible}
+        setVisible={setModalVisible}
+      />
+      <View style={{ flex: 1 }}>
+        {!region && (
+          <ActivityIndicator
+            style={styles.waiting}
+            size="small"
+            color="#0000ff"
+          />
+        )}
+
+        {/* Add MapView */}
+        {region && (
+          <MapView
+            ref={mapRef}
+            style={{ flex: 14 }}
+            mapType="mutedStandard"
+            region={region}
+          >
+            {/* {serverIsUp && alert("Server is up!")} */}
+
+            {/*App MapView.Marker to show users current position*/}
+            <MapView.Marker
+              title="me"
+              pinColor="blue"
+              coordinate={{
+                longitude: Number(position.longitude),
+                latitude: Number(position.latitude),
+              }}
+            />
+            {showNearByPlayer &&
+              nearByPlayers.map((p, i) => (
+                <MapView.Marker
+                  key={i}
+                  title={p.name}
+                  coordinate={{
+                    longitude: p.lon,
+                    latitude: p.lat,
+                  }}
+                />
+              ))}
+          </MapView>
+        )}
+        {/* <View style={{ flex: 1, padding: 5 }}>
+        <Text style={styles.paragraph}>
+          Your position (lat,long): {position.latitude}, {position.longitude}
+          {"\n\n"}
+          {info}
+        </Text>
+      </View> */}
+        {/* <View style={{ flex: 3 }}>
+        <Button
+          style={{ padding: 5 }}
+          onPress={sendRealPosToServer}
+          title="Upload real Position"
+        />
+        <Button
+          style={{ padding: 5 }}
+          onPress={() => onCenterGameArea()}
+          title="Show Game Area"
+        />
+      </View> */}
+      </View>
     </View>
   );
 };
@@ -220,9 +232,13 @@ const styles = StyleSheet.create({
     paddingTop: Constants.statusBarHeight,
   },
   paragraph: {
-    margin: 24,
+    fontFamily: "Helvetica Neue",
     fontSize: 18,
     textAlign: "center",
+  },
+  waiting: {
+    flex: 14,
+    justifyContent: "center",
   },
 });
 
